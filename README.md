@@ -15,7 +15,7 @@ Each layer is a persisted Delta table (`retail_project.bronze/silver/gold_*`), n
 **Silver**: cleaned and validated:
 - `InvoiceDate` cast to `timestamp` (raw format was `M/d/yy H:m`; had to work through Spark's datetime pattern syntax, including a `D` vs `d` bug, day-of-year vs day-of-month, that produced internally inconsistent parsed dates before failing outright)
 - `InvoiceNo` kept as `string`, not cast to int, to preserve the `C`-prefix that marks cancelled orders
-- `Cancelled` flag derived from `Quantity < 0`, cross-checked against the `C`-prefix pattern to confirm they agree
+- `Cancelled` flag derived from `Quantity < 0`, since that's the actual signal that would distort revenue math, rather than relying on the `C`-prefix in `InvoiceNo`
 - Checked `Quantity`/`UnitPrice` for nulls before trusting them in revenue math; both came back with zero nulls, so no drop was needed there. `CustomerID` has around 25k nulls but was left as-is, since those rows are still valid for revenue totals, just not for customer-level breakdowns
 - Duplicates removed after confirming by inspection they were exact full-row matches, not legitimate repeat line items
 
